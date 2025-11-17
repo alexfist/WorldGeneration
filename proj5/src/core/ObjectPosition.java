@@ -1,5 +1,5 @@
 package core;
-
+//class for object position tracking
 public class ObjectPosition {
     int x;
     int y;

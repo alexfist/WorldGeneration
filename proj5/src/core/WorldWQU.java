@@ -1,5 +1,5 @@
 package core;
-
+//use this for hallway generation; each object in the WQU represents a room in the world
 public class WorldWQU {
     private int[] parent;
     private int[] rank;
