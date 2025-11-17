@@ -1,9 +1,13 @@
 package core;
 
+import tileengine.TERenderer;
+
 public class Main {
     public static void main(String[] args) {
-
-        // build your own world!
+        World newWorld = new World(69, 50, 50);
+        TERenderer ter = new TERenderer();
+        ter.initialize(newWorld.WIDTH, newWorld.HEIGHT);
+        ter.renderFrame(newWorld.theWorld);
 
 
     }
