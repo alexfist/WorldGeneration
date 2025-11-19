@@ -18,6 +18,7 @@ public class World {
     public WorldWQU roomsWQU;
     private List<ObjectPosition> roomCenters;
     private List<Room> roomList;
+
     public World(long seed, int width, int height) {
         this.random = new Random(seed);
         this.WIDTH = width;
@@ -42,7 +43,7 @@ public class World {
     private void generateRooms() {
         int roomsArea = 0;
         int totalRooms = 0;
-        double max_room_area = 0.25 * this.HEIGHT * this.WIDTH; //can change this to change how filled the screen is w/ rooms
+        double max_room_area = 0.25 * this.HEIGHT * this.WIDTH; // can change this to change how filled the screen is w/ rooms
         while (roomsArea <= max_room_area) {
             //pick valid width/height for the room
             int width, height;
@@ -77,14 +78,14 @@ public class World {
         this.roomsWQU = new WorldWQU(totalRooms);
     }
     private void createRoom(int startX, int startY, int width, int height, int roomID) {
-        //place the floors
+        // place the floors
         for (int i = startX + 1; i < startX + width; i++) {
             for (int j = startY + 1; j < startY + height; j++) {
                 this.theWorld[i][j] = Tileset.FLOOR;
                 this.roomIndexGrid[i][j] = roomID;
             }
         }
-        //place the walls
+        // place the walls
         for (int i = startY; i <= startY + height; i++) {
             this.theWorld[startX][i] = Tileset.WALL;
             this.roomIndexGrid[startX][i] = roomID;
@@ -115,48 +116,77 @@ public class World {
         }
         return false;
     }
+    // Static edge class to compare distances
+    private static class Edge implements Comparable<Edge> {
+        int a;
+        int b;
+        double dist;
+
+        Edge(int a, int b, double dist) {
+            this.a = a;
+            this.b = b;
+            this.dist = dist;
+        }
+
+        @Override
+        public int compareTo(Edge other) {
+            return Double.compare(this.dist, other.dist);
+        }
+    }
+
+    // Pythagoras Theorem
+    public double distanceFunc(double x, double y) {
+        return Math.sqrt(x*x + y*y);
+    }
+
+    // Connect nearby Rooms
     private void generateHallways() {
-        if (roomList.size() <= 1) {
+        int n = roomList.size();
+        if (n <= 1) {
             return;
         }
 
-        // keep connecting random unconnected pairs until everything is in one component
-        while (!this.roomsWQU.allConnected()) {
-            int[] pair = pickTwoRoomsForHallway();
-            int room1index = pair[0];
-            int room2index = pair[1];
-            connectRooms(room1index, room2index);
+        // List of all rooms and their distances
+        // to every other room
+        List<Edge> edges = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            ObjectPosition c1 = roomCenters.get(i);
+            for (int j = i + 1; j < n; j++) {
+                ObjectPosition c2 = roomCenters.get(j);
+                double xDist = c1.x - c2.x;
+                double yDist = c1.y - c2.y;
+                double dist = distanceFunc(xDist, yDist); // Straight line Dist
+                edges.add(new Edge(i, j, dist));
+            }
         }
 
+        edges.sort(null); // Sort distances
+
+        for (Edge e : edges) {
+            if (!roomsWQU.connected(e.a, e.b)) {
+                connectRooms(e.a, e.b);
+            }
+        }
     }
     private void connectRooms(int r1index, int r2index) {
-        ObjectPosition door1 = pickDoorOnRoom(r1index);
-        ObjectPosition door2 = pickDoorOnRoom(r2index);
+        ObjectPosition c1 = roomCenters.get(r1index);
+        ObjectPosition c2 = roomCenters.get(r2index);
 
-        int x1 = door1.x;
-        int y1 = door1.y;
-        int x2 = door2.x;
-        int y2 = door2.y;
+        int x1 = c1.x;
+        int y1 = c1.y;
+        int x2 = c2.x;
+        int y2 = c2.y;
 
-        // carve the doorway tiles
-        carveDoorTile(x1, y1);
-        carveDoorTile(x2, y2);
-
-        // pick corridor style: horizontal-then-vertical or reversed
         if (random.nextBoolean()) {
-            carveHorizontally(x1, x2, y1);  // corridor from door1.x → door2.x
-            carveVertically(y1, y2, x2);    // then down/up at x2
+            carveHorizontally(x1, x2, y1);
+            carveVertically(y1, y2, x2);
         } else {
             carveVertically(y1, y2, x1);
             carveHorizontally(x1, x2, y2);
         }
-
         roomsWQU.union(r1index, r2index);
     }
-    private void carveDoorTile(int x, int y) {
-        theWorld[x][y] = Tileset.FLOOR;
-        roomIndexGrid[x][y] = -1; // door belongs to hallway, not the room interior
-    }
+
     private void carveHorizontally(int startX, int endX, int y) {
         int step;
         if (endX >= startX) {
@@ -193,37 +223,7 @@ public class World {
         tryPlaceHallWall(x, y + 1);
         tryPlaceHallWall(x, y - 1);
     }
-    private ObjectPosition pickDoorOnRoom(int roomIndex) {
-        Room r = roomList.get(roomIndex);
-        // room floor spans (x+1 ... x+width-1), (y+1 ... y+height-1)
-        // room walls are at x, x+width, y, y+height
-        // pick a random wall side
-        int side = random.nextInt(4);
 
-        int doorX = 0;
-        int doorY = 0;
-
-        switch (side) {
-            case 0: // bottom wall
-                doorX = RandomUtils.uniform(random, r.x + 1, r.x + r.w - 1);
-                doorY = r.y;
-                break;
-            case 1: // top wall
-                doorX = RandomUtils.uniform(random, r.x + 1, r.x + r.w - 1);
-                doorY = r.y + r.h;
-                break;
-            case 2: // left wall
-                doorX = r.x;
-                doorY = RandomUtils.uniform(random, r.y + 1, r.y + r.h - 1);
-                break;
-            case 3: // right wall
-                doorX = r.x + r.w;
-                doorY = RandomUtils.uniform(random, r.y + 1, r.y + r.h - 1);
-                break;
-        }
-
-        return new ObjectPosition(doorX, doorY);
-    }
     private void tryPlaceHallWall(int x, int y) {
 
         if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) {
@@ -253,16 +253,5 @@ public class World {
             roomIndexGrid[x][y] = -1; // hall-wall indicator
         }
     }
-    private int[] pickTwoRoomsForHallway() {
-        int a = random.nextInt(roomList.size());
-        int b = 0;
-        while (true) {
-            b = random.nextInt(roomList.size());
-            if (b != a && !roomsWQU.connected(a, b)) {
-                break;
-            }
-        }
-        return new int[] {a, b};
-    }
-
 }
+

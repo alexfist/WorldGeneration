@@ -45,8 +45,4 @@ public class WorldWQU {
         }
         return true;
     }
-
 }
-
-
-
