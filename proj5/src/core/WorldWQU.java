@@ -36,6 +36,15 @@ public class WorldWQU {
     public boolean connected(int i, int j) {
         return find(i) == find(j);
     }
+    public boolean allConnected() {
+        int root0 = find(0);
+        for (int i = 1; i < parent.length; i++) {
+            if (find(i) != root0) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 }
 
