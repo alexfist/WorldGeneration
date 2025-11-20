@@ -14,10 +14,10 @@ public class World {
 
     private final Random random;
     public TETile[][] theWorld;
-    private int[][] roomIndexGrid;
+    private final int[][] roomIndexGrid;
     public WorldWQU roomsWQU;
-    private List<ObjectPosition> roomCenters;
-    private List<Room> roomList;
+    private final List<ObjectPosition> roomCenters;
+    private final List<Room> roomList;
 
     public World(long seed, int width, int height) {
         this.random = new Random(seed);
@@ -43,8 +43,11 @@ public class World {
     private void generateRooms() {
         int roomsArea = 0;
         int totalRooms = 0;
+        int attempts = 0;
+        final int MAX_ATTEMPTS = 5000;
         double max_room_area = 0.25 * this.HEIGHT * this.WIDTH; // can change this to change how filled the screen is w/ rooms
-        while (roomsArea <= max_room_area) {
+        while (roomsArea <= max_room_area && attempts < MAX_ATTEMPTS) {
+            attempts += 1;
             //pick valid width/height for the room
             int width, height;
             while (true) {
@@ -68,7 +71,7 @@ public class World {
             createRoom(x, y, width, height, this.roomList.size()-1);
             //count number of rooms create
             totalRooms += 1;
-            //add roomarea to the totalroomarea; we don't want our rooms to take up the entire space
+            //add roomArea to the totalRoomArea; we don't want our rooms to take up the entire space
             roomsArea += width * height;
             //store centers of the room later for hallway generation
             int cx = x + width / 2;
@@ -118,13 +121,13 @@ public class World {
     }
     // Static edge class to compare distances
     private static class Edge implements Comparable<Edge> {
-        int a;
-        int b;
+        int room1;
+        int room2;
         double dist;
 
-        Edge(int a, int b, double dist) {
-            this.a = a;
-            this.b = b;
+        Edge(int room1, int room2, double dist) {
+            this.room1 = room1;
+            this.room2 = room2;
             this.dist = dist;
         }
 
@@ -163,8 +166,8 @@ public class World {
         edges.sort(null); // Sort distances
 
         for (Edge e : edges) {
-            if (!roomsWQU.connected(e.a, e.b)) {
-                connectRooms(e.a, e.b);
+            if (!roomsWQU.connected(e.room1, e.room2)) {
+                connectRooms(e.room1, e.room2);
             }
         }
     }
