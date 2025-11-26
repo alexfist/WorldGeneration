@@ -1,9 +1,12 @@
 package core;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.Out;
 import tileengine.TETile;
 import tileengine.Tileset;
 import utils.RandomUtils;
@@ -20,6 +23,7 @@ public class World {
     private final List<Room> roomList;
     public int playerX;
     public int playerY;
+
     public World(long seed, int width, int height) {
         this.random = new Random(seed);
         this.WIDTH = width;
@@ -42,6 +46,33 @@ public class World {
         this.generateHallways();
         this.placePlayer();
     }
+
+    // Used only for loading from file
+    // notice DOES NOT have seed as argument
+    public World(int width, int height) {
+        this.WIDTH = width;
+        this.HEIGHT = height;
+        this.random = new java.util.Random();
+
+        this.roomList = new ArrayList<>();
+        this.roomCenters = new ArrayList<>();
+        this.roomIndexGrid = new int[WIDTH][HEIGHT];
+        for (int i = 0; i < WIDTH; i++) {
+            for (int j = 0; j < HEIGHT; j++) {
+                roomIndexGrid[i][j] = -1;
+            }
+        }
+
+        this.theWorld = new TETile[WIDTH][HEIGHT];
+        for (int x = 0; x < WIDTH; x++) {
+            for (int y = 0; y < HEIGHT; y++) {
+                theWorld[x][y] = Tileset.NOTHING;
+            }
+        }
+
+        this.roomsWQU = new WorldWQU(0);
+    }
+
     private void generateRooms() {
         int roomsArea = 0;
         int totalRooms = 0;
@@ -285,6 +316,40 @@ public class World {
                 theWorld[playerX][playerY] = Tileset.AVATAR;
             }
         }
+    }
+    public String HUD(int x, int y) {
+        return getObject(x, y);
+    }
+    public String getObject(int x, int y) {
+        // Not in field
+        if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) {
+            return "";
+        }
+        TETile tile = theWorld[x][y];
+        return tile.description();
+    }
+
+
+    // Save helpers
+    public int getWidth()  {
+        return WIDTH;
+    }
+    public int getHeight() {
+        return HEIGHT;
+    }
+    public int getPlayerX() {
+        return playerX;
+    }
+    public int getPlayerY() {
+        return playerY;
+    }
+    public TETile[][] getWorldTiles() {
+        return theWorld;
+    }
+
+    public void setPlayerPosition(int x, int y) {
+        playerX = x;
+        playerY = y;
     }
 }
 

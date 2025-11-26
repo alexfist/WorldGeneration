@@ -47,7 +47,7 @@ public class Main {
             World newWorld = new World(seed, 60, 40);
             return newWorld;
         } else if (c == 'L') {
-            return loadGame();
+            return SaveFile.loadGame("save.txt");
         } else {
             System.exit(0);
             return null;
@@ -81,14 +81,6 @@ public class Main {
             }
         }
     }
-    //TODO: implement loading feature; use the SaveFile class!
-    public static World loadGame() {
-        World loadWorld = new World(5766286691213492728L, 60, 40);
-        return loadWorld;
-    }
-    public static void saveGame(World wrld) {
-        System.out.println("WIP");
-    }
     public static void gameplayLoop(World world, TERenderer ter) {
         boolean waitingForColon = false;
         while (true) {
@@ -96,7 +88,7 @@ public class Main {
                 char c = Character.toUpperCase(StdDraw.nextKeyTyped());
                 // quit command; need to have the colon and Q combination to quit
                 if (waitingForColon && c == 'Q') {
-                    saveGame(world);
+                    SaveFile.saveGame(world, "save.txt");
                     System.exit(0);
                 }
                 if (c == ':') {
@@ -108,11 +100,26 @@ public class Main {
                 // movement stuff
                 if (c == 'W' || c == 'A' || c == 'S' || c == 'D') {
                     world.move(c);
-                    ter.renderFrame(world.theWorld);
                 }
             }
-            //give the library a quick little break
+
+            // After loop so that HUD string isnt constantly being
+            // put on top of previous strings
+            ter.renderFrame(world.theWorld);
+
+            int x =(int) StdDraw.mouseX();
+            int y =(int) StdDraw.mouseY();
+
+            String hudText = world.HUD(x, y);
+
+            StdDraw.setPenColor(Color.WHITE);
+            StdDraw.setFont(new Font("Monaco", Font.PLAIN, 14));
+            StdDraw.textLeft(1, world.HEIGHT - 1, hudText);
+
+            StdDraw.show();
+
             StdDraw.pause(10);
         }
+
     }
 }
