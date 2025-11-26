@@ -18,7 +18,8 @@ public class World {
     public WorldWQU roomsWQU;
     private final List<ObjectPosition> roomCenters;
     private final List<Room> roomList;
-
+    public int playerX;
+    public int playerY;
     public World(long seed, int width, int height) {
         this.random = new Random(seed);
         this.WIDTH = width;
@@ -39,14 +40,15 @@ public class World {
         }
         this.generateRooms();
         this.generateHallways();
+        this.placePlayer();
     }
     private void generateRooms() {
         int roomsArea = 0;
         int totalRooms = 0;
         int attempts = 0;
-        final int MAX_ATTEMPTS = 5000;
+        final int MAXATTEMPTS = 5000;
         double max_room_area = 0.25 * this.HEIGHT * this.WIDTH; // can change this to change how filled the screen is w/ rooms
-        while (roomsArea <= max_room_area && attempts < MAX_ATTEMPTS) {
+        while (roomsArea <= max_room_area && attempts < MAXATTEMPTS) {
             attempts += 1;
             //pick valid width/height for the room
             int width, height;
@@ -80,6 +82,7 @@ public class World {
         }
         this.roomsWQU = new WorldWQU(totalRooms);
     }
+    //room generation functions
     private void createRoom(int startX, int startY, int width, int height, int roomID) {
         // place the floors
         for (int i = startX + 1; i < startX + width; i++) {
@@ -119,6 +122,7 @@ public class World {
         }
         return false;
     }
+    //hallway generation functions
     // Static edge class to compare distances
     private static class Edge implements Comparable<Edge> {
         int room1;
@@ -136,19 +140,15 @@ public class World {
             return Double.compare(this.dist, other.dist);
         }
     }
-
     // Pythagoras Theorem
-    public double distanceFunc(double x, double y) {
+    private double distanceFunc(double x, double y) {
         return Math.sqrt(x*x + y*y);
     }
-
-    // Connect nearby Rooms
     private void generateHallways() {
         int n = roomList.size();
         if (n <= 1) {
             return;
         }
-
         // List of all rooms and their distances
         // to every other room
         List<Edge> edges = new ArrayList<>();
@@ -162,9 +162,7 @@ public class World {
                 edges.add(new Edge(i, j, dist));
             }
         }
-
         edges.sort(null); // Sort distances
-
         for (Edge e : edges) {
             if (!roomsWQU.connected(e.room1, e.room2)) {
                 connectRooms(e.room1, e.room2);
@@ -189,7 +187,6 @@ public class World {
         }
         roomsWQU.union(r1index, r2index);
     }
-
     private void carveHorizontally(int startX, int endX, int y) {
         int step;
         if (endX >= startX) {
@@ -201,7 +198,6 @@ public class World {
             carveHallTile(x, y);
         }
     }
-
     private void carveVertically(int startY, int endY, int x) {
         int step;
         if (endY >= startY) {
@@ -217,7 +213,6 @@ public class World {
         // hall floor
         theWorld[x][y] = Tileset.FLOOR;
         roomIndexGrid[x][y] = -1;
-
         addHallWallsAround(x, y);
     }
     private void addHallWallsAround(int x, int y) {
@@ -226,34 +221,69 @@ public class World {
         tryPlaceHallWall(x, y + 1);
         tryPlaceHallWall(x, y - 1);
     }
-
     private void tryPlaceHallWall(int x, int y) {
-
         if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) {
             return;
         }
-
         TETile tile = theWorld[x][y];
-
         // If it's already a room wall, leave it
         if (tile == Tileset.WALL) {
             return;
         }
-
         // If it's room floor, do not touch it
         if (tile == Tileset.FLOOR && roomIndexGrid[x][y] != -1) {
             return;
         }
-
         // If it's hallway floor, do nothing
         if (tile == Tileset.FLOOR && roomIndexGrid[x][y] == -1) {
             return;
         }
-
         // If it's empty, place a hall wall
         if (tile == Tileset.NOTHING) {
             theWorld[x][y] = Tileset.WALL;
             roomIndexGrid[x][y] = -1; // hall-wall indicator
+        }
+    }
+    //player movement stuff
+    public void placePlayer() {
+        //initialize a pseudorandom position for the player to start at
+        while (true) {
+            int x = this.random.nextInt(WIDTH);
+            int y = this.random.nextInt(HEIGHT);
+            if (theWorld[x][y] == Tileset.FLOOR) {
+                playerX = x;
+                playerY = y;
+                theWorld[x][y] = Tileset.AVATAR;
+                break;
+            }
+        }
+    }
+    public void move(char direction) {
+        //movement of the player
+        int newX = playerX;
+        int newY = playerY;
+        if (direction == 'W') {
+            newY += 1;
+        }
+        if (direction == 'S') {
+            newY -= 1;
+        }
+        if (direction == 'A') {
+            newX -= 1;
+        }
+        if (direction == 'D') {
+            newX += 1;
+        }
+        // check if newY and newX are valid, then move player to the new coordinates
+        // ONLY IF the new coordinates doesn't have a wall; also make sure we turn
+        // the previous spot the player was in into a floor tile again
+        if (newX >= 0 && newX < WIDTH && newY >= 0 && newY < HEIGHT) {
+            if (theWorld[newX][newY] != Tileset.WALL) {
+                theWorld[playerX][playerY] = Tileset.FLOOR;
+                playerX = newX;
+                playerY = newY;
+                theWorld[playerX][playerY] = Tileset.AVATAR;
+            }
         }
     }
 }
