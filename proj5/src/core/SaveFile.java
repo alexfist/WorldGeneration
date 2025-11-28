@@ -16,6 +16,8 @@ public class SaveFile {
         out.println(width + " " + height);
         // X and Y
         out.println(world.getPlayerX() + " " + world.getPlayerY());
+        // Enemy
+        out.println(world.enemyX + " " + world.enemyY);
 
         // World tiles
         TETile[][] tiles = world.getWorldTiles();
@@ -39,6 +41,8 @@ public class SaveFile {
         int height = in.readInt();
         int savedX = in.readInt();
         int savedY = in.readInt();
+        int enemyX = in.readInt();
+        int enemyY = in.readInt();
         in.readLine();
 
         // Loader that IS NOT random
@@ -54,6 +58,10 @@ public class SaveFile {
         }
 
         w.setPlayerPosition(savedX, savedY);
+        w.enemyX = enemyX;
+        w.enemyY = enemyY;
+        w.theWorld[enemyX][enemyY] = Tileset.MOUNTAIN;
+
         return w;
     }
 

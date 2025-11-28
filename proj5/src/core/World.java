@@ -23,6 +23,8 @@ public class World {
     private final List<Room> roomList;
     public int playerX;
     public int playerY;
+    public int enemyX;
+    public int enemyY;
 
     public World(long seed, int width, int height) {
         this.random = new Random(seed);
@@ -45,6 +47,7 @@ public class World {
         this.generateRooms();
         this.generateHallways();
         this.placePlayer();
+        this.placeEnemy();
     }
 
     // Used only for loading from file
@@ -289,6 +292,24 @@ public class World {
             }
         }
     }
+    /// ##############################################################
+    /// USED MOUNTAIN TO REPRESENT ENEMY
+    /// ##############################################################
+    public void placeEnemy() {
+        // Same thing as above but for enemy
+        while (true) {
+            int x = this.random.nextInt(WIDTH);
+            int y = this.random.nextInt(HEIGHT);
+            if (theWorld[x][y] == Tileset.FLOOR) {
+                enemyX = x;
+                enemyY = y;
+                theWorld[x][y] = Tileset.MOUNTAIN; // Mounntaini for enemy
+                break;
+            }
+        }
+    }
+
+
     public void move(char direction) {
         //movement of the player
         int newX = playerX;
