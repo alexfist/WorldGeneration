@@ -1,12 +1,9 @@
 package core;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import edu.princeton.cs.algs4.In;
-import edu.princeton.cs.algs4.Out;
 import tileengine.TETile;
 import tileengine.Tileset;
 import utils.RandomUtils;
@@ -25,6 +22,8 @@ public class World {
     public int playerY;
     public int enemyX;
     public int enemyY;
+    public int coinsCollected;
+    public int maxCoins;
 
     public World(long seed, int width, int height) {
         this.random = new Random(seed);
@@ -33,6 +32,7 @@ public class World {
         this.roomList = new ArrayList<>();
         this.roomCenters = new ArrayList<>();
         this.roomIndexGrid = new int[WIDTH][HEIGHT];
+        this.coinsCollected = 0;
         for (int i = 0; i < WIDTH; i++) {
             for (int j = 0; j < HEIGHT; j++) {
                 roomIndexGrid[i][j] = -1;
@@ -46,6 +46,7 @@ public class World {
         }
         this.generateRooms();
         this.generateHallways();
+        this.generateCoins();
         this.placePlayer();
         this.placeEnemy();
     }
@@ -75,7 +76,20 @@ public class World {
 
         this.roomsWQU = new WorldWQU(0);
     }
-
+    private void generateCoins() {
+        maxCoins = this.random.nextInt(3,7);
+        for (int i = 0; i < maxCoins; i++) {
+            while (true) {
+                int x = this.random.nextInt(WIDTH);
+                int y = this.random.nextInt(HEIGHT);
+                if (theWorld[x][y] == Tileset.FLOOR && theWorld[x][y] != Tileset.FLOWER) {
+                    theWorld[x][y] = Tileset.FLOWER;
+                    break;
+                }
+            }
+        }
+    }
+    //room generation functions
     private void generateRooms() {
         int roomsArea = 0;
         int totalRooms = 0;
@@ -116,7 +130,6 @@ public class World {
         }
         this.roomsWQU = new WorldWQU(totalRooms);
     }
-    //room generation functions
     private void createRoom(int startX, int startY, int width, int height, int roomID) {
         // place the floors
         for (int i = startX + 1; i < startX + width; i++) {
@@ -157,7 +170,6 @@ public class World {
         return false;
     }
     //hallway generation functions
-    // Static edge class to compare distances
     private static class Edge implements Comparable<Edge> {
         int room1;
         int room2;
@@ -174,7 +186,6 @@ public class World {
             return Double.compare(this.dist, other.dist);
         }
     }
-    // Pythagoras Theorem
     private double distanceFunc(double x, double y) {
         return Math.sqrt(x*x + y*y);
     }
@@ -303,7 +314,7 @@ public class World {
             if (theWorld[x][y] == Tileset.FLOOR) {
                 enemyX = x;
                 enemyY = y;
-                theWorld[x][y] = Tileset.MOUNTAIN; // Mounntaini for enemy
+                theWorld[x][y] = Tileset.MOUNTAIN; // Mountain for enemy
                 break;
             }
         }
@@ -330,6 +341,12 @@ public class World {
         // ONLY IF the new coordinates doesn't have a wall; also make sure we turn
         // the previous spot the player was in into a floor tile again
         if (newX >= 0 && newX < WIDTH && newY >= 0 && newY < HEIGHT) {
+            //check for coins
+            if (theWorld[newX][newY] == Tileset.FLOWER) {
+                coinsCollected += 1;
+                theWorld[newX][newY] = Tileset.FLOOR;
+            }
+
             if (theWorld[newX][newY] != Tileset.WALL) {
                 theWorld[playerX][playerY] = Tileset.FLOOR;
                 playerX = newX;
@@ -339,38 +356,20 @@ public class World {
         }
     }
     public String HUD(int x, int y) {
-        return getObject(x, y);
-    }
-    public String getObject(int x, int y) {
-        // Not in field
-        if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) {
-            return "";
+        StringBuilder sb = new StringBuilder();
+        // Add tile info
+        if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
+            sb.append(theWorld[x][y].description());
+        } else {
+            sb.append("Out of bounds");
         }
-        TETile tile = theWorld[x][y];
-        return tile.description();
-    }
+        // Add coin info
+        sb.append("   |   Coins: ")
+                .append(coinsCollected)
+                .append("/")
+                .append(maxCoins);
 
-
-    // Save helpers
-    public int getWidth()  {
-        return WIDTH;
-    }
-    public int getHeight() {
-        return HEIGHT;
-    }
-    public int getPlayerX() {
-        return playerX;
-    }
-    public int getPlayerY() {
-        return playerY;
-    }
-    public TETile[][] getWorldTiles() {
-        return theWorld;
-    }
-
-    public void setPlayerPosition(int x, int y) {
-        playerX = x;
-        playerY = y;
+        return sb.toString();
     }
 }
 

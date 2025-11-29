@@ -27,7 +27,7 @@ public class Pathfinder {
     }
 
     private boolean validEdge(int x, int y) {
-        TETile t = world.getWorldTiles()[x][y];
+        TETile t = world.theWorld[x][y];
         return t == Tileset.FLOOR || t == Tileset.AVATAR || t == Tileset.MOUNTAIN;
     }
 
@@ -48,7 +48,7 @@ public class Pathfinder {
         distTo[s] = 0.0;
         pq.insert(s, 0.0);
 
-        // all possible direcitons from a given vertex
+        // all possible directions from a given vertex
         int[][] directions = {{1,0}, {-1,0}, {0,1}, {0,-1}};
 
         while (!pq.isEmpty()) {
@@ -78,8 +78,11 @@ public class Pathfinder {
                 if (newDist < distTo[v1d]) {
                     distTo[v1d] = newDist;
                     edgeTo[v1d] = v;
-                    if (pq.contains(v1d)) pq.decreaseKey(v1d, newDist);
-                    else pq.insert(v1d, newDist);
+                    if (pq.contains(v1d)) {
+                        pq.decreaseKey(v1d, newDist);
+                    } else {
+                        pq.insert(v1d, newDist);
+                    }
                 }
             }
         }
