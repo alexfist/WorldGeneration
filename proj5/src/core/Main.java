@@ -236,7 +236,7 @@ public class Main {
     }
     private static void playJumpscareSound() {
         try {
-            File soundFile = new File("/Users/Adi/fa25-proj5c-new-g217/proj5/src/jumpscare_sound.wav"); // or "sounds/jumpscare.wav"
+            File soundFile = new File("src/jumpscare_sound.wav");
             AudioInputStream audioIn = AudioSystem.getAudioInputStream(soundFile);
             Clip clip = AudioSystem.getClip();
             clip.open(audioIn);
