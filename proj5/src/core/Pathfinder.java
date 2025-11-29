@@ -12,8 +12,8 @@ public class Pathfinder {
     public Pathfinder(World world) {
         this.world = world;
     }
-    // 2D position to 1D so we can use dijkstra like
-    // how is done in percolation
+    // 2D position to 1D so we can use dijkstra
+    // Similar function to how it's done in percolation
     private int to1D(int x, int y) {
         return y * world.WIDTH + x;
     }
@@ -35,7 +35,7 @@ public class Pathfinder {
     public List<int[]> shortestPath(int playerX, int playerY, int enemyX, int enemyY) {
         int w = world.WIDTH;
         int h = world.HEIGHT;
-        int V = w * h;
+        int V = w * h; // number of vertices
 
         double[] distTo = new double[V];
         int[] edgeTo = new int[V];
@@ -48,16 +48,20 @@ public class Pathfinder {
         distTo[s] = 0.0;
         pq.insert(s, 0.0);
 
+        // all possible direcitons from a given vertex
         int[][] directions = {{1,0}, {-1,0}, {0,1}, {0,-1}};
 
         while (!pq.isEmpty()) {
             int v = pq.delMin();
             if (v == t) break; // reached target
 
+            // x and y pos of given vertex
             int vx = xPos(v);
             int vy = yPos(v);
 
             for (int[] d : directions) {
+                // adding x and y values in the possible
+                // ways you can move from given vertex
                 int nx = vx + d[0];
                 int ny = vy + d[1];
                 if (nx < 0 || nx >= w || ny < 0 || ny >= h) {
@@ -67,15 +71,15 @@ public class Pathfinder {
                     continue;
                 }
 
-                int wId = to1D(nx, ny);
+                int v1d = to1D(nx, ny);
                 double weight = 1.0; // each step costs 1
                 double newDist = distTo[v] + weight;
 
-                if (newDist < distTo[wId]) {
-                    distTo[wId] = newDist;
-                    edgeTo[wId] = v;
-                    if (pq.contains(wId)) pq.decreaseKey(wId, newDist);
-                    else pq.insert(wId, newDist);
+                if (newDist < distTo[v1d]) {
+                    distTo[v1d] = newDist;
+                    edgeTo[v1d] = v;
+                    if (pq.contains(v1d)) pq.decreaseKey(v1d, newDist);
+                    else pq.insert(v1d, newDist);
                 }
             }
         }

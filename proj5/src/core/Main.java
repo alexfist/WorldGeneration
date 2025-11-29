@@ -202,7 +202,7 @@ public class Main {
     }
     private static void gameOver(World world) {
         // Normal game over screen first
-        StdDraw.clear(Color.BLACK);
+        StdDraw.clear(Color.RED);
         StdDraw.setPenColor(Color.WHITE);
         StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
         StdDraw.text(world.WIDTH / 2.0, world.HEIGHT / 2.0 + 2, "GAME OVER");
@@ -210,8 +210,8 @@ public class Main {
         StdDraw.text(world.WIDTH / 2.0, world.HEIGHT / 2.0 - 2, "Press Q to quit");
         StdDraw.show();
 
-        // Random delay between 0.1–5 seconds
-        int delayMillis = 100 + RNG.nextInt(4000); // 0.1-5 seconds
+        // Random delay between 0.5–5 seconds
+        int delayMillis = 500 + RNG.nextInt(4000); // 0.1-5 seconds
         try {
             Thread.sleep(delayMillis);
         } catch (InterruptedException e) {
@@ -219,7 +219,7 @@ public class Main {
         }
 
         // Jumpscare overlay
-        StdDraw.clear(Color.BLACK);
+        StdDraw.clear(Color.RED);
         StdDraw.picture(world.WIDTH / 2.0, world.HEIGHT / 2.0,
                 "jumpscare.png", world.WIDTH, world.HEIGHT);
         StdDraw.show();
@@ -235,12 +235,13 @@ public class Main {
         }
     }
     private static void playJumpscareSound() {
+        // have to do this in try/catch pair
         try {
             File soundFile = new File("src/jumpscare_sound.wav");
             AudioInputStream audioIn = AudioSystem.getAudioInputStream(soundFile);
             Clip clip = AudioSystem.getClip();
             clip.open(audioIn);
-            clip.start(); // starts playing, method returns immediately
+            clip.start();
         } catch (Exception e) {
             e.printStackTrace();
         }
