@@ -4,11 +4,17 @@ import tileengine.TERenderer;
 import edu.princeton.cs.algs4.StdDraw;
 import tileengine.Tileset;
 
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import java.awt.Color;
 import java.awt.Font;
+import java.io.File;
 import java.util.List;
+import java.util.Random;
 
 public class Main {
+    private static final Random RNG = new Random();
     public static void main(String[] args) {
         //this gets the world that the user wants from the main menu
         //will either be a saved world or a new world.
@@ -127,7 +133,7 @@ public class Main {
             }
 
             long now = System.currentTimeMillis();
-            if (now - lastEnemyMove >= 1000) { // 5000 ms = 5 seconds
+            if (now - lastEnemyMove >= 1000) { // 1000 ms = 1 second
                 moveEnemyTowardsPlayer(world, pf);
                 lastEnemyMove = now;
             }
@@ -194,18 +200,31 @@ public class Main {
             world.theWorld[newX][newY] = Tileset.MOUNTAIN;
         }
     }
-
     private static void gameOver(World world) {
+        // Normal game over screen first
         StdDraw.clear(Color.BLACK);
         StdDraw.setPenColor(Color.WHITE);
         StdDraw.setFont(new Font("Monaco", Font.BOLD, 30));
-        StdDraw.text(world.WIDTH / 2.0, world.HEIGHT / 2.0, "YOU SUCK");
+        StdDraw.text(world.WIDTH / 2.0, world.HEIGHT / 2.0 + 2, "GAME OVER");
         StdDraw.setFont(new Font("Monaco", Font.PLAIN, 18));
         StdDraw.text(world.WIDTH / 2.0, world.HEIGHT / 2.0 - 2, "Press Q to quit");
-
         StdDraw.show();
 
-        // Wait until user presses Q
+        // Random delay between 0.1–5 seconds
+        int delayMillis = 100 + RNG.nextInt(4000); // 0.1-5 seconds
+        try {
+            Thread.sleep(delayMillis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        // Jumpscare overlay
+        StdDraw.clear(Color.BLACK);
+        StdDraw.picture(world.WIDTH / 2.0, world.HEIGHT / 2.0,
+                "jumpscare.png", world.WIDTH, world.HEIGHT);
+        StdDraw.show();
+        playJumpscareSound();
+        // Wait for Q to quit
         while (true) {
             if (StdDraw.hasNextKeyTyped()) {
                 char c = Character.toUpperCase(StdDraw.nextKeyTyped());
@@ -213,6 +232,17 @@ public class Main {
                     System.exit(0);
                 }
             }
+        }
+    }
+    private static void playJumpscareSound() {
+        try {
+            File soundFile = new File("/Users/Adi/fa25-proj5c-new-g217/proj5/src/jumpscare_sound.wav"); // or "sounds/jumpscare.wav"
+            AudioInputStream audioIn = AudioSystem.getAudioInputStream(soundFile);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioIn);
+            clip.start(); // starts playing, method returns immediately
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
